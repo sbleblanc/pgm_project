@@ -14,7 +14,8 @@ save_path = '$path=states/aae_mnist.tar$'
 
 nepoch = $nepoch=100$
 batch_size = $bs=100$
-lr = $lr=0.01$
+rec_lr = $rec_lr={0:0.01,50:0.001,500:0.0001}$
+adv_lr = $adv_lr={0:0.1,50:0.01,500:0.001}$
 input_noise = $input_noise=0.3$
 
 z_dim = $z_dim=2$
@@ -40,9 +41,9 @@ if torch.cuda.is_available():
     adv.cuda()
 
 rec_params = list(enc.parameters()) + list(dec.parameters())
-state_dict['rec_opt'] = rec_opt = torch.optim.SGD(rec_params, lr=lr, momentum=0.9)
-state_dict['gen_opt'] = gen_opt = torch.optim.SGD(enc.parameters(), lr=lr, momentum=0.1)
-state_dict['adv_opt'] = adv_opt = torch.optim.SGD(adv.parameters(), lr=lr, momentum=0.1)
+state_dict['rec_opt'] = rec_opt = torch.optim.SGD(rec_params, lr=rec_lr[0], momentum=0.9)
+state_dict['gen_opt'] = gen_opt = torch.optim.SGD(enc.parameters(), lr=adv_lr[0], momentum=0.1)
+state_dict['adv_opt'] = adv_opt = torch.optim.SGD(adv.parameters(), lr=adv_lr[0], momentum=0.1)
 
 results = {'rec':[], 'gen':[], 'adv':[], 'x_rec':[], 'z_hmap':[], 'z_space':[], 'z_grad':[], 'llh':[]}
 state = State(state_dict, {'epoch':0, 'batch':0, 'results':results})
@@ -51,8 +52,14 @@ state.load(save_path)
 aae = AAE(enc, dec, dis, adv)
 for k in range(nepoch):
     state['epoch'] += 1
+    epoch = state['epoch']
     now = dt.now().strftime('%Y-%m-%d %H:%M:%S')
-    print('{} - Epoch {}'.format(now, state['epoch']), end='\r')
+    print('{} - Epoch {}'.format(now, epoch), end='\r')
+    if epoch in rec_lr:
+        state_dict['rec_opt'] = rec_opt = torch.optim.SGD(rec_params, lr=rec_lr[epoch], momentum=0.9)
+    if epoch in adv_lr:
+        state_dict['gen_opt'] = gen_opt = torch.optim.SGD(enc.parameters(), lr=adv_lr[epoch], momentum=0.1)
+        state_dict['adv_opt'] = adv_opt = torch.optim.SGD(adv.parameters(), lr=adv_lr[epoch], momentum=0.1)
     for x, y in dataset.batch(batch_size):
         x += np.random.normal(0, input_noise, x.shape)
         x = torch.tensor(x, dtype=torch.float32)
