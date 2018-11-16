@@ -10,7 +10,7 @@ from training import State
 
 device = 'gpu' if torch.cuda.is_available() else 'cpu'
 print('Training on {}'.format(device))
-save_path = $path='states/aae_mnist.tar'$
+save_path = '$path=states/aae_mnist.tar$'
 
 nepoch = $nepoch=100$
 batch_size = $bs=100$
