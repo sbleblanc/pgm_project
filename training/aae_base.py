@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torch.nn.utils.clip_grad import clip_grad_norm_
 from loaders import $dataset=Mnist$ as Dataset
 from datetime import datetime as dt
 from dist import $dis=Gaussian$ as Dis
@@ -19,8 +20,9 @@ adv_lr = $adv_lr={0:0.1,50:0.01,500:0.001}$
 input_noise = $input_noise=0.3$
 
 z_dim = $z_dim=2$
-hidden = $h=[500, 500]$
+hidden = $h=[1000, 1000]$
 batch_norm = $bn=False$
+enc_wb = $enc_wb=None$
 
 xlim = $xlim=(-20,20)$
 ylim = $ylim=(-20,20)$
@@ -31,7 +33,7 @@ dataset = Dataset()
 dis = Dis()
 
 state_dict = dict()
-state_dict['enc'] = enc = MLP([784] + hidden + [z_dim], batch_norm=batch_norm)
+state_dict['enc'] = enc = MLP([784] + hidden + [z_dim], batch_norm=batch_norm, w_bound=enc_wb)
 state_dict['dec'] = dec = MLP([z_dim] + hidden + [784], batch_norm=batch_norm)
 state_dict['adv'] = adv = MLP([z_dim] + hidden + [1], batch_norm=batch_norm)
 
@@ -60,7 +62,7 @@ for k in range(nepoch):
     if epoch in adv_lr:
         state_dict['gen_opt'] = gen_opt = torch.optim.SGD(enc.parameters(), lr=adv_lr[epoch], momentum=0.1)
         state_dict['adv_opt'] = adv_opt = torch.optim.SGD(adv.parameters(), lr=adv_lr[epoch], momentum=0.1)
-    for x, y in dataset.batch(batch_size):
+    for x, y in dataset.batch(batch_size, seed=epoch):
         x += np.random.normal(0, input_noise, x.shape)
         x = torch.tensor(x, dtype=torch.float32)
         if torch.cuda.is_available(): x = x.cuda()
@@ -70,14 +72,17 @@ for k in range(nepoch):
         if state['batch']%3==0:
             loss = aae.rec_loss(x)
             loss.backward()
+            clip_grad_norm_(rec_params, 5)
             rec_opt.step()
         if state['batch']%3==1:
             loss = aae.adv_loss(x)
             loss.backward()
+            clip_grad_norm_(adv.parameters(), 5)
             adv_opt.step()
         if state['batch']%3==2:
             loss = aae.gen_loss(x)
             loss.backward()
+            clip_grad_norm_(enc.parameters(), 5)
             gen_opt.step()
         state['batch'] += 1
 

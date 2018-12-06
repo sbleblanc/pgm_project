@@ -27,7 +27,7 @@ class Spiral(object):
     def log_likelihood(self, data):
         #TODO
         #some maths is needed here
-        return 0
+        return np.array([0])
 
 class Flower(object):
     def __init__(self, n_petals=10, r_noise=3, t_noise=0.45, mu_dist=8, rng=np.random):

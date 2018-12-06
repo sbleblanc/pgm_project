@@ -24,8 +24,8 @@ class AAE(object):
         self.adv.eval()
         z = self.enc(x)
         if register_hook is not None:
-            z.register_hook(lambda grad: register_hook.append(grad))
-        s = -logsigmoid(-self.adv(z)[:,0])
+            z.register_hook(lambda grad: register_hook.append(grad.cpu().numpy()))
+        s = -logsigmoid(self.adv(z)[:,0])
         return s.mean()
 
     def adv_loss(self, x, eval=False):
@@ -38,6 +38,6 @@ class AAE(object):
         if torch.cuda.is_available(): z1 = z1.cuda()
         z = torch.cat([z0, z1], dim=0)
         o = self.adv(z)[:,0]
-        s0 = -logsigmoid(o[:l])
-        s1 = -logsigmoid(-o[l:])
+        s0 = -logsigmoid(-o[:l])
+        s1 = -logsigmoid(o[l:])
         return (s0.mean() + s1.mean())/2
