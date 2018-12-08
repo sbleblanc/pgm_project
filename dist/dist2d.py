@@ -13,16 +13,31 @@ class Gaussian(object):
         return llh.sum(axis=1)
 
 class Spiral(object):
-    def __init__(self, alpha=1, n_turns=2.25, noise=0.2, rng=np.random):
+    def __init__(self, alpha=1, n_turns=2.25, noise=0.15, rng=np.random, num_classes=10):
         self.alpha = alpha
         self.n_turns = n_turns
         self.noise = noise
         self.rng = rng
+        self.num_classes = num_classes
         
-    def __call__(self, n):
-        t = self.rng.uniform(0, self.n_turns*2*np.pi, n)
-        r = self.alpha*t + self.rng.normal(0, self.noise, n)
-        return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
+    def __call__(self, n, classify=False, sections=None):
+        if not classify:
+            t = self.rng.uniform(0, self.n_turns*2*np.pi, n)
+            r = self.alpha*t + self.rng.normal(0, self.noise, n)
+            return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
+        else:
+            which = self.rng.randint(0, self.num_classes, n)
+            y_swap = np.argwhere(sections != 10)
+            which[y_swap] = sections[y_swap]
+            split = self.n_turns*2*np.pi/self.num_classes
+            t = np.zeros(n)
+            for i in range(n):
+                s = self.rng.uniform(split*which[i], split*which[i] + split, 1)
+                t[i] = s
+            r = self.alpha * t + self.rng.normal(0, self.noise, n)
+            return np.stack([r * np.cos(t), r * np.sin(t)], axis=1), which
+
+
     
     def log_likelihood(self, data):
         #TODO
@@ -68,13 +83,13 @@ class Flower(object):
         return self.gaussian2d_M([self.mu_dist, 0], cov, n)
 
 
-    def __call__(self, n, classify=False, petals=None):
+    def __call__(self, n, classify=False, sections=None):
         rad = 2*np.pi/self.n_petals
         gs = self.gaussian2d([self.mu_dist, 0], self.r_noise, self.t_noise, n)
         which = self.rng.randint(0, self.n_petals, n)
-        if petals is not None:
-            y_swap = np.argwhere(petals != 10)
-            which[y_swap] = petals[y_swap]
+        if sections is not None:
+            y_swap = np.argwhere(sections != 10)
+            which[y_swap] = sections[y_swap]
         data = np.array([self.rotate(w*rad, g) for w,g in zip(which, gs)])
         if classify: return data, which
         return data
