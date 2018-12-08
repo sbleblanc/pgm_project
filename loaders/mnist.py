@@ -12,9 +12,13 @@ class Mnist(object):
         self.valid = Datasets(x=valid[0], y=valid[1])
         self.test = Datasets(x=test[0], y=test[1])
         if num_unlabelled > 0:
-            sorted_indices = self.train.y.argsort()
-            to_unlabel = sorted_indices[rnd.randint(0, len(sorted_indices), num_unlabelled)]
-            self.train.y[to_unlabel] = 10
+            to_keep = set()
+            split = int((len(self.train.y) - num_unlabelled) / 10)
+            for i in range(10):
+                lbl_indices = np.argwhere(self.train.y == i)
+                to_keep.update(lbl_indices[:split].flatten())
+            to_unlabel = set(np.arange(0, len(self.train.y))).difference(to_keep)
+            self.train.y[list(to_unlabel)] = 10
 
         
     def batch(self, bs, which='train', limit=None, seed=0):
