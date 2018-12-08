@@ -68,10 +68,13 @@ class Flower(object):
         return self.gaussian2d_M([self.mu_dist, 0], cov, n)
 
 
-    def __call__(self, n, classify=False):
+    def __call__(self, n, classify=False, petals=None):
         rad = 2*np.pi/self.n_petals
         gs = self.gaussian2d([self.mu_dist, 0], self.r_noise, self.t_noise, n)
         which = self.rng.randint(0, self.n_petals, n)
+        if petals is not None:
+            y_swap = np.argwhere(petals != 10)
+            which[y_swap] = petals[y_swap]
         data = np.array([self.rotate(w*rad, g) for w,g in zip(which, gs)])
         if classify: return data, which
         return data
