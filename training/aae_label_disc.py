@@ -6,7 +6,7 @@ from datetime import datetime as dt
 from dist import $dis=Gaussian$ as Dis
 from models.base import MLP
 from models.aae import AAERegularized
-from evals.hmap import hmap
+from evals.hmap import hmap_y
 from training import State
 
 device = 'gpu' if torch.cuda.is_available() else 'cpu'
@@ -30,6 +30,7 @@ xdelta = $xdelta=0.5$
 ydelta = $ydelta=0.5$
 
 dataset = Dataset(num_unlabelled=$unlabel=40000$)
+# dis = Dis(r_noise=$r_noise=3$, t_noise=$t_noise=0.45$, mu_dist=$mu_dist=8$)
 dis = Dis()
 
 state_dict = dict()
@@ -86,8 +87,8 @@ for k in range(nepoch):
             gen_opt.step()
         state['batch'] += 1
 
-    x = dataset.valid.x[:1000]
-    y = dataset.valid.y[:1000]
+    x = dataset.valid.x
+    y = dataset.valid.y
     x = torch.tensor(x, dtype=torch.float32)
     if torch.cuda.is_available(): x = x.cuda()
     enc.eval()
@@ -97,7 +98,9 @@ for k in range(nepoch):
     state['results']['gen'].append(float(aae.gen_loss(x, y, eval=True)))
     state['results']['adv'].append(float(aae.adv_loss(x, y, eval=True)))
     state['results']['x_rec'].append(torch.sigmoid(dec(enc(x[:5]))).detach().cpu().numpy())
-    # state['results']['z_hmap'].append(hmap(adv, xlim, ylim, xdelta, ydelta))
+    state['results']['z_hmap'].append(hmap_y(adv, 0, xlim, ylim, xdelta, ydelta))
+    for i in range(1, 10):
+        state['results']['z_hmap'][-1] = np.maximum(state['results']['z_hmap'][-1],hmap_y(adv, i, xlim, ylim, xdelta, ydelta))
     state['results']['z_space'].append(enc(x).detach().cpu().numpy())
     aae.gen_loss(x, y, eval=True, register_hook=state['results']['z_grad']).backward()
     state['results']['llh'].append(dis.log_likelihood(enc(x).detach().cpu().numpy()).mean())
