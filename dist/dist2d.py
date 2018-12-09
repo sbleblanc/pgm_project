@@ -13,31 +13,48 @@ class Gaussian(object):
         return llh.sum(axis=1)
 
 class Spiral(object):
-    def __init__(self, alpha=1, n_turns=2.25, noise=0.15, rng=np.random, num_classes=10):
+    def __init__(self, alpha=1, n_turns=2.25, noise=0.2, n_class=10, rng=np.random):
         self.alpha = alpha
         self.n_turns = n_turns
         self.noise = noise
+        self.n_class = n_class
         self.rng = rng
-        self.num_classes = num_classes
         
-    def __call__(self, n, classify=False, sections=None):
-        if not classify:
-            t = self.rng.uniform(0, self.n_turns*2*np.pi, n)
-            r = self.alpha*t + self.rng.normal(0, self.noise, n)
-            return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
-        else:
-            which = self.rng.randint(0, self.num_classes, n)
-            y_swap = np.argwhere(sections != 10)
-            which[y_swap] = sections[y_swap]
-            split = self.n_turns*2*np.pi/self.num_classes
-            t = np.zeros(n)
-            for i in range(n):
-                s = self.rng.uniform(split*which[i], split*which[i] + split, 1)
-                t[i] = s
-            r = self.alpha * t + self.rng.normal(0, self.noise, n)
-            return np.stack([r * np.cos(t), r * np.sin(t)], axis=1), which
+    def length_arc(self, t):
+        sqrt = np.sqrt(t**2 + 1)
+        return self.alpha * (np.log(t + sqrt) + t*sqrt)
 
+    def random_curve(self, t):
+        r = self.alpha*t + self.rng.normal(0, self.noise, len(t))
+        return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
 
+    def classify(self, t):
+        total_length = self.length_arc(self.n_turns*2*np.pi)
+        length_marks = [i*total_length/self.n_class for i in range(1, self.n_class+1)]
+        t_marks = inverse_solver(self.length_arc, length_marks, 0, total_length)
+        return np.array([(a < t_marks).argmax() for a in t])
+
+    def __call__(self, n, classify=False):
+        t = self.rng.uniform(0, self.n_turns*2*np.pi, n)
+        data = self.random_curve(t)
+        if classify: return data, self.classify(t)
+        else: return data
+
+        # if not classify:
+        #     t = self.rng.uniform(0, self.n_turns*2*np.pi, n)
+        #     r = self.alpha*t + self.rng.normal(0, self.noise, n)
+        #     return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
+        # else:
+        #     which = self.rng.randint(0, self.num_classes, n)
+        #     y_swap = np.argwhere(sections != 10)
+        #     which[y_swap] = sections[y_swap]
+        #     split = self.n_turns*2*np.pi/self.num_classes
+        #     t = np.zeros(n)
+        #     for i in range(n):
+        #         s = self.rng.uniform(split*which[i], split*which[i] + split, 1)
+        #         t[i] = s
+        #     r = self.alpha * t + self.rng.normal(0, self.noise, n)
+        #     return np.stack([r * np.cos(t), r * np.sin(t)
     
     def log_likelihood(self, data):
         #TODO

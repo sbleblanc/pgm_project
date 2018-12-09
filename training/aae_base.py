@@ -15,13 +15,14 @@ save_path = '$path=states/aae_mnist.tar$'
 
 nepoch = $nepoch=100$
 batch_size = $bs=100$
-rec_lr = $rec_lr={0:0.01,50:0.001,500:0.0001}$
-adv_lr = $adv_lr={0:0.1,50:0.01,500:0.001}$
+rec_lr = $rec_lr={0:.0,50:0.001,500:0.0001}$
+adv_lr = $adv_lr={0:0.1,50:0.05,500:0.005}$
 input_noise = $input_noise=0.3$
 
 z_dim = $z_dim=2$
 hidden = $h=[1000, 1000]$
-batch_norm = $bn=False$
+batch_norm = $bn=True$
+leaky = $leaky=0$
 enc_wb = $enc_wb=None$
 
 xlim = $xlim=(-20,20)$
@@ -32,6 +33,7 @@ ydelta = $ydelta=0.5$
 dataset = Dataset()
 dis = Dis()
 
+adv_nl = lambda : torch.nn.LeakyReLU(leaky)
 state_dict = dict()
 state_dict['enc'] = enc = MLP([784] + hidden + [z_dim], batch_norm=batch_norm, w_bound=enc_wb)
 state_dict['dec'] = dec = MLP([z_dim] + hidden + [784], batch_norm=batch_norm)
