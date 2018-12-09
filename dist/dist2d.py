@@ -9,6 +9,11 @@ class Gaussian(object):
         
     def __call__(self, n):
         return self.rng.normal(0, self.noise, (n,2))
+
+    def gaussian_percentile(self, n):
+        mu = np.array([0,0])
+        K = self.noise*np.eye(2)
+        return gaussian_percentile(n, mu, K)
     
     def log_likelihood(self, data):
         llh = -(data/self.noise)**2/2 - np.log(self.noise) - np.log(2*np.pi)/2
@@ -24,16 +29,21 @@ class Spiral(object):
         
     def length_arc(self, t):
         sqrt = np.sqrt(t**2 + 1)
-        return self.alpha * (np.log(t + sqrt) + t*sqrt)
+        return self.alpha * .5 * (np.log(t + sqrt) + t*sqrt)
     
     def random_curve(self, t):
         r = self.alpha*t + self.rng.normal(0, self.noise, len(t))
         return np.stack([r*np.cos(t), r*np.sin(t)], axis=1)
     
+    def length_arc_curve(self, s):
+        t = inverse_solver(self.length_arc, s, 0, self.n_turns*2*np.pi)
+        return self.random_curve(t)
+    
     def classify(self, t):
-        total_length = self.length_arc(self.n_turns*2*np.pi)
+        max_t = self.n_turns*2*np.pi
+        total_length = self.length_arc(max_t)
         length_marks = [i*total_length/self.n_class for i in range(1, self.n_class+1)]
-        t_marks = inverse_solver(self.length_arc, length_marks, 0, total_length)
+        t_marks = inverse_solver(self.length_arc, length_marks, 0, max_t)
         return np.array([(a < t_marks).argmax() for a in t])
         
     def __call__(self, n, classify=False):
