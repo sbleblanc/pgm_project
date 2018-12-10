@@ -74,7 +74,7 @@ class Spiral(object):
         return np.array([0])
 
 class Flower(object):
-    def __init__(self, n_petals=10, r_noise=3, t_noise=0.45, mu_dist=8, rng=np.random):
+    def __init__(self, n_petals=10, r_noise=6, t_noise=0.30, mu_dist=8, rng=np.random):
         self.n_petals = n_petals
         self.r_noise = r_noise
         self.t_noise = t_noise
