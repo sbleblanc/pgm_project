@@ -44,10 +44,13 @@ if torch.cuda.is_available():
     adv.cuda()
 
 rec_params = list(enc.parameters()) + list(dec.parameters())
+# state_dict['rec_opt'] = rec_opt = torch.optim.Adam(rec_params, lr=rec_lr[0])
+# state_dict['gen_opt'] = gen_opt = torch.optim.Adam(enc.parameters(), lr=adv_lr[0])
+# state_dict['adv_opt'] = adv_opt = torch.optim.Adam(adv.parameters(), lr=adv_lr[0])
 state_dict['rec_opt'] = rec_opt = torch.optim.SGD(rec_params, lr=rec_lr[0], momentum=0.9)
 state_dict['gen_opt'] = gen_opt = torch.optim.SGD(enc.parameters(), lr=adv_lr[0], momentum=0.1)
 state_dict['adv_opt'] = adv_opt = torch.optim.SGD(adv.parameters(), lr=adv_lr[0], momentum=0.1)
-
+#$adv_lr={0:0.1,100:0.01,800:0.0001} rec_lr={0:0.,100:0.001,800:0.0001}
 results = {'rec':[], 'gen':[], 'adv':[], 'x_rec':[], 'z_hmap':[], 'z_space':[], 'z_grad':[], 'llh':[]}
 state = State(state_dict, {'epoch':0, 'batch':0, 'results':results})
 state.load(save_path)

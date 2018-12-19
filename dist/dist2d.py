@@ -51,22 +51,22 @@ class Spiral(object):
         length_marks = [i * total_length / self.n_class for i in range(1, self.n_class + 1)]
         return inverse_solver(self.length_arc, length_marks, 0, total_length)
 
-    def __call__(self, n, classify=False, sections=None):
+    def __call__(self, n, classify=False, which=None):
         if not classify:
             t = self.rng.uniform(0, self.n_turns * 2 * np.pi, n)
             data = self.random_curve(t)
             return data
         else:
-            which = self.rng.randint(0, self.n_class, n)
-            y_swap = np.argwhere(sections != 10)
-            which[y_swap] = sections[y_swap]
+            which_sections = self.rng.randint(0, self.n_class, n)
+            y_swap = np.argwhere(which != 10)
+            which_sections[y_swap] = which[y_swap]
             splits = np.hstack([np.array([0]), self.get_splits()])
             t = np.zeros(n)
             for i in range(n):
-                s = self.rng.uniform(splits[which[i]], splits[which[i] + 1], 1)
+                s = self.rng.uniform(splits[which_sections[i]], splits[which_sections[i] + 1], 1)
                 t[i] = s
             # r = self.alpha * t + self.rng.normal(0, self.noise, n)
-            return self.random_curve(t), which
+            return self.random_curve(t), which_sections
     
     def log_likelihood(self, data):
         #TODO

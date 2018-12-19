@@ -77,7 +77,7 @@ class AAERegularized(AAE):
         l = len(x)
         z0 = self.enc(x)
         z0 = torch.cat([z0, oh], 1)
-        z1, d_y = self.dis(l, classify=True, sections=y)
+        z1, d_y = self.dis(l, classify=True, which=y)
         z1 = np.hstack([z1, self.one_hot(d_y)])
         z1 = torch.tensor(z1, dtype=torch.float32)
         if torch.cuda.is_available(): z1 = z1.cuda()
