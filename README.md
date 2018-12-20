@@ -15,9 +15,9 @@ Adversarial Autoencoders and Moment Matching Autoencoders
   
 ## Usage
 ### Training one model
-`./train <template name> [<template arg1 name>=<template arg1 value> ...]`
+`./train <template path> [<template arg1 name>=<template arg1 value> ...]`
 
-e.g. `./train mymodel.template path=states/mymodel.tar h_num=100 lr=0.01 optimizer=SGD`
+e.g. `./train path/to/my/template.template path=states/mymodel.tar h_num=100 lr=0.01 optimizer=SGD`
 
 Notes: The provided template write a saves a lot. Be conscious of where states is located if you are on a cluster.
 
