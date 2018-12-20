@@ -22,6 +22,6 @@ e.g. `./train path/to/my/template.py path=states/mymodel.tar h_num=100 lr=0.01 o
 Notes: The provided template write a saves a lot. Be conscious of where states is located if you are on a cluster.
 
 ## Templates
-* Templates are python code with "holes" known as template args
+* Templates are python code with placeholder
 * Template files are located in ./training
-* Templates "holes" syntaxe is: `${my_variable_name=default_value}` e.g. `num_hid_units = ${h_num=100}`
+* Templates placeholders syntaxe is: `${my_variable_name=default_value}` e.g. `num_hid_units = ${h_num=100}`
