@@ -11,7 +11,7 @@ Adversarial Autoencoders and Moment Matching Autoencoders
   cd pgm_project
   ln -s path/to/states states
   ```
-  `ln` creates a symbolic link, to where you want to put the state of your models alternatively, one could use `mkdir`.
+  `ln` creates a symbolic link to where you want to put the state(s) of your model(s). Alternatively, one could use `mkdir`.
   
 ## Usage
 ### Training one model
